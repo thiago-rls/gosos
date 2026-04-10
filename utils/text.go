@@ -20,5 +20,5 @@ Examples:
   gosos run
   gosos live 30          (Check every 30 seconds)
 
-For more information, visit: https://github.com/thr-ls/gosos
+For more information, visit: https://git.thrls.net/thiagorls/gosos
 `

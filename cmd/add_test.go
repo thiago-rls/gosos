@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"flag"
-	"github.com/thr-ls/gosos/storage"
+	"git.thrls.net/thiagorls/gosos/storage"
 	"testing"
 )
 

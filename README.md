@@ -17,7 +17,7 @@ I needed something I could use to check the multiple self-hosted services I use.
 To install gosos, make sure you have Go installed on your system, then run:
 
 ```
-go install github.com/thr-ls/gosos@latest
+go install git.thrls.net/thiagorls/gosos@latest
 ```
 
 ## Usage
@@ -58,7 +58,7 @@ To contribute to gosos or set up the development environment:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/thr-ls/gosos.git
+   git clone https://git.thrls.net/thiagorls/gosos.git
    ```
 2. Navigate to the project directory:
    ```

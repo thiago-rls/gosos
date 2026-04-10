@@ -1,4 +1,4 @@
-module github.com/thr-ls/gosos
+module git.thrls.net/thiagorls/gosos
 
 go 1.22.5
 

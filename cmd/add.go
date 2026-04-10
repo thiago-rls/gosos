@@ -3,8 +3,8 @@ package cmd
 import (
 	"flag"
 	"fmt"
-	"github.com/thr-ls/gosos/output"
-	"github.com/thr-ls/gosos/storage"
+	"git.thrls.net/thiagorls/gosos/output"
+	"git.thrls.net/thiagorls/gosos/storage"
 	"net/url"
 
 	"golang.org/x/exp/slices"

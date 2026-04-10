@@ -36,14 +36,19 @@ func TestIsUp(t *testing.T) {
 }
 
 func TestIsUpInvalidURL(t *testing.T) {
-	result := IsUp("http://invalid-url-that-does-not-exist.com")
+	result := IsUp("http://invalid-url-that-does-not-exist.invalid")
 	if result != false {
 		t.Errorf("IsUp with invalid URL should return false, got true")
 	}
 }
 
 func TestMonitorStatus(t *testing.T) {
-	url := "http://example.com"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	url := server.URL
 	stop := make(chan struct{})
 	status := make(chan StatusUpdate, 1)
 
@@ -78,7 +83,12 @@ func TestMonitorStatus(t *testing.T) {
 }
 
 func TestCheckAndSend(t *testing.T) {
-	url := "http://example.com"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	url := server.URL
 	status := make(chan StatusUpdate, 1)
 
 	checkAndSend(url, status)

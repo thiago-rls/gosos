@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/thr-ls/gosos/cmd"
-	"github.com/thr-ls/gosos/output"
-	"github.com/thr-ls/gosos/utils"
+	"git.thrls.net/thiagorls/gosos/cmd"
+	"git.thrls.net/thiagorls/gosos/output"
+	"git.thrls.net/thiagorls/gosos/utils"
 	"os"
 	"strconv"
 )

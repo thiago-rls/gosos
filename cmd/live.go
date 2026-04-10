@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"bufio"
-	"github.com/thr-ls/gosos/network"
-	"github.com/thr-ls/gosos/output"
+	"git.thrls.net/thiagorls/gosos/network"
+	"git.thrls.net/thiagorls/gosos/output"
 	"os"
 	"time"
 )
