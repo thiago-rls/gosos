@@ -34,9 +34,12 @@ func TestValidateURL(t *testing.T) {
 		urlStr  string
 		wantErr bool
 	}{
-		{"Valid URL", "http://example.com", false},
+		{"Valid HTTP URL", "http://example.com", false},
+		{"Valid HTTPS URL", "https://example.com", false},
 		{"Invalid URL", "not-a-url", true},
 		{"Missing scheme", "example.com", true},
+		{"FTP scheme rejected", "ftp://example.com", true},
+		{"File scheme rejected", "file:///etc/passwd", true},
 	}
 
 	for _, tt := range tests {

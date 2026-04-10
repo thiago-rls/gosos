@@ -69,7 +69,12 @@ func addURLToList(urlList *storage.URLList, urlStr string) error {
 	return storage.SaveURLs(urlList, storage.FileName)
 }
 
-// isValidURL checks if a parsed URL has both a scheme and a host
+// isValidURL checks that the parsed URL uses http or https and has a host.
+// gosos only monitors HTTP endpoints, so other schemes (file, ftp, ...) are
+// rejected up front rather than failing mysteriously later in IsUp.
 func isValidURL(u *url.URL) bool {
-	return u.Scheme != "" && u.Host != ""
+	if u.Host == "" {
+		return false
+	}
+	return u.Scheme == "http" || u.Scheme == "https"
 }
