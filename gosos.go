@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strconv"
+
 	"git.thrls.net/thiagorls/gosos/cmd"
 	"git.thrls.net/thiagorls/gosos/output"
 	"git.thrls.net/thiagorls/gosos/utils"
-	"os"
-	"strconv"
 )
 
 func main() {

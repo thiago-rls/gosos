@@ -2,15 +2,12 @@ package cmd
 
 import (
 	"bufio"
-	"git.thrls.net/thiagorls/gosos/network"
-	"git.thrls.net/thiagorls/gosos/output"
 	"os"
 	"sync"
 	"time"
-)
 
-const (
-	updateInterval = 100 * time.Millisecond
+	"git.thrls.net/thiagorls/gosos/network"
+	"git.thrls.net/thiagorls/gosos/output"
 )
 
 // Live function manages the real-time monitoring of URLs
@@ -103,9 +100,6 @@ func monitorLoop(urlIndexMap map[string]int, statusChan <-chan network.StatusUpd
 			close(stopChan)
 			output.PrintWarning("Monitoring stopped. Closing all connections.")
 			return
-		case <-time.After(updateInterval):
-			// This case prevents the select from blocking indefinitely
-			// It allows the loop to check for new status updates or user input regularly
 		}
 	}
 }

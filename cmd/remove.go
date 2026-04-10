@@ -3,11 +3,12 @@ package cmd
 import (
 	"flag"
 	"fmt"
+
+	"golang.org/x/exp/slices"
+
 	"git.thrls.net/thiagorls/gosos/output"
 	"git.thrls.net/thiagorls/gosos/storage"
 	"git.thrls.net/thiagorls/gosos/utils"
-
-	"golang.org/x/exp/slices"
 )
 
 // Remove function handles the removal of a URL from the list
@@ -40,7 +41,9 @@ func Remove(args []string) {
 // parseRemoveArgs parses and validates the command-line arguments for the remove command
 func parseRemoveArgs(args []string) (string, error) {
 	rmCmd := flag.NewFlagSet("remove", flag.ExitOnError)
-	rmCmd.Parse(args)
+	if err := rmCmd.Parse(args); err != nil {
+		return "", err
+	}
 
 	if rmCmd.NArg() < 1 {
 		return "", fmt.Errorf("insufficient arguments\nUsage: gosos remove <url>")

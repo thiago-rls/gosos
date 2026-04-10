@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"flag"
-	"git.thrls.net/thiagorls/gosos/storage"
 	"testing"
+
+	"git.thrls.net/thiagorls/gosos/storage"
 )
 
 func TestValidateArgs(t *testing.T) {
@@ -53,6 +54,13 @@ func TestValidateURL(t *testing.T) {
 }
 
 func TestAddURLToList(t *testing.T) {
+	// addURLToList persists via storage.SaveURLs, which writes under the
+	// user's home directory. Redirect HOME to a temp dir so the test can
+	// never touch the real ~/.gosos-urls.json.
+	tmp := t.TempDir()
+	t.Setenv("HOME", tmp)
+	t.Setenv("USERPROFILE", tmp) // Windows
+
 	urlList := &storage.URLList{URLs: []string{"http://existing.com"}}
 	newURL := "http://new-example.com"
 

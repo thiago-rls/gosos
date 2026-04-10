@@ -2,9 +2,10 @@ package output
 
 import (
 	"fmt"
-	"github.com/pterm/pterm"
 	"strings"
 	"sync"
+
+	"github.com/pterm/pterm"
 )
 
 var (

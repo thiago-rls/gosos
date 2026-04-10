@@ -3,17 +3,21 @@ package cmd
 import (
 	"flag"
 	"fmt"
-	"git.thrls.net/thiagorls/gosos/output"
-	"git.thrls.net/thiagorls/gosos/storage"
 	"net/url"
 
 	"golang.org/x/exp/slices"
+
+	"git.thrls.net/thiagorls/gosos/output"
+	"git.thrls.net/thiagorls/gosos/storage"
 )
 
 // Add function handles the 'add' command to add a new URL to the list
 func Add(args []string) {
 	addCmd := flag.NewFlagSet("add", flag.ExitOnError)
-	addCmd.Parse(args)
+	if err := addCmd.Parse(args); err != nil {
+		output.PrintError(err.Error())
+		return
+	}
 
 	if err := validateArgs(addCmd); err != nil {
 		output.PrintError(err.Error())

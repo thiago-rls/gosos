@@ -1,9 +1,11 @@
 package cmd
 
 import (
-	"git.thrls.net/thiagorls/gosos/storage"
-	"golang.org/x/exp/slices"
 	"testing"
+
+	"golang.org/x/exp/slices"
+
+	"git.thrls.net/thiagorls/gosos/storage"
 )
 
 func TestParseRemoveArgs(t *testing.T) {

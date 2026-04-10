@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"sync"
+
 	"git.thrls.net/thiagorls/gosos/network"
 	"git.thrls.net/thiagorls/gosos/output"
-	"sync"
 )
 
 type URLStatus struct {
