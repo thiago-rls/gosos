@@ -17,6 +17,7 @@ const (
 func Live(interval int) {
 	urlList, err := loadURLs()
 	if err != nil {
+		output.PrintError("Error loading URLs: " + err.Error())
 		return
 	}
 
