@@ -35,6 +35,45 @@ func TestIsUp(t *testing.T) {
 	}
 }
 
+func TestIsUpFallsBackToGETWhenHEADUnsupported(t *testing.T) {
+	var sawGET bool
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodHead:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		case http.MethodGet:
+			sawGET = true
+			w.WriteHeader(http.StatusOK)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	if !IsUp(server.URL) {
+		t.Errorf("IsUp should fall back to GET and report up, got false")
+	}
+	if !sawGET {
+		t.Errorf("IsUp never issued a GET fallback after 405 on HEAD")
+	}
+}
+
+func TestIsUpPrefersHEAD(t *testing.T) {
+	var methods []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		methods = append(methods, r.Method)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	if !IsUp(server.URL) {
+		t.Fatalf("IsUp returned false for a 200 server")
+	}
+	if len(methods) != 1 || methods[0] != http.MethodHead {
+		t.Errorf("expected a single HEAD request, got %v", methods)
+	}
+}
+
 func TestIsUpInvalidURL(t *testing.T) {
 	result := IsUp("http://invalid-url-that-does-not-exist.invalid")
 	if result != false {

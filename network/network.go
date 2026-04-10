@@ -14,13 +14,23 @@ const requestTimeout = 10 * time.Second
 
 var httpClient = &http.Client{Timeout: requestTimeout}
 
-// IsUp checks if a given URL is accessible and returns true if the status code is 2xx
+// IsUp checks if a given URL is accessible and returns true if the status code is 2xx.
+// It issues a HEAD request first (cheap, no body transfer) and falls back to GET if
+// the server doesn't support HEAD (405 Method Not Allowed or 501 Not Implemented).
 func IsUp(url string) bool {
-	resp, err := httpClient.Get(url)
+	resp, err := httpClient.Head(url)
 	if err != nil {
 		return false
 	}
-	defer resp.Body.Close()
+	resp.Body.Close()
+
+	if resp.StatusCode == http.StatusMethodNotAllowed || resp.StatusCode == http.StatusNotImplemented {
+		resp, err = httpClient.Get(url)
+		if err != nil {
+			return false
+		}
+		defer resp.Body.Close()
+	}
 
 	return resp.StatusCode >= 200 && resp.StatusCode < 300
 }
