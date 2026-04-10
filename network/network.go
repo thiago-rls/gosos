@@ -10,9 +10,13 @@ type StatusUpdate struct {
 	IsUp bool
 }
 
+const requestTimeout = 10 * time.Second
+
+var httpClient = &http.Client{Timeout: requestTimeout}
+
 // IsUp checks if a given URL is accessible and returns true if the status code is 2xx
 func IsUp(url string) bool {
-	resp, err := http.Get(url)
+	resp, err := httpClient.Get(url)
 	if err != nil {
 		return false
 	}

@@ -52,45 +52,11 @@ gosos live 60  # Check every 60 seconds
 
 Gosos stores the list of URLs in a JSON file located at `~/.gosos-urls.json`. This file is automatically created by the tool.
 
-## Development
-
-To contribute to gosos or set up the development environment:
-
-1. Clone the repository:
-   ```
-   git clone https://git.thrls.net/thiagorls/gosos.git
-   ```
-2. Navigate to the project directory:
-   ```
-   cd gosos
-   ```
-3. Install dependencies:
-   ```
-   go mod tidy
-   ```
-4. Build the project:
-   ```
-   go build gosos.go
-   ```
-5. Run the project:
-   ```
-   go run ./gosos
-   ```
-
 ## Dependencies
 
 - [pterm](https://github.com/pterm/pterm): For terminal output styling and live updates
-- Standard Go libraries
 
 ## Contributing
 
 This is a project I built with the set of features I need for my personal use, but any contributions are welcome! Please feel free to submit a Pull Request.
 
-## Support
-
-If you encounter any problems or have any questions, please open an issue on the project repository.
-
-## Todo
-- [ ] Create tests
-- [ ] Fix some glitches with pterm terminal output
-- [ ] Add options to remove from list by index
