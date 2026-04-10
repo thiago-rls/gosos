@@ -53,7 +53,7 @@ func TestMonitorStatus(t *testing.T) {
 	status := make(chan StatusUpdate, 1)
 
 	// Start monitoring in a goroutine
-	go MonitorStatus(url, stop, status)
+	go MonitorStatus(url, 30*time.Second, stop, status)
 
 	// Wait for the first status update
 	var update StatusUpdate

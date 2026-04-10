@@ -26,8 +26,8 @@ func IsUp(url string) bool {
 }
 
 // MonitorStatus continuously monitors the status of a URL and sends updates through a channel
-func MonitorStatus(url string, stop <-chan struct{}, status chan<- StatusUpdate) {
-	ticker := time.NewTicker(30 * time.Second)
+func MonitorStatus(url string, interval time.Duration, stop <-chan struct{}, status chan<- StatusUpdate) {
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
 	checkAndSend(url, status)

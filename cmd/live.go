@@ -28,7 +28,7 @@ func Live(interval int) {
 	stopChan := make(chan struct{})
 	statusChan := make(chan network.StatusUpdate, len(urlList.URLs))
 
-	launchMonitors(urlList.URLs, stopChan, statusChan)
+	launchMonitors(urlList.URLs, time.Duration(interval)*time.Second, stopChan, statusChan)
 
 	// Listen for user input to stop the monitoring
 	inputChan := listenForUserInput()
@@ -52,9 +52,9 @@ func initializeLiveDisplay(urls []string) error {
 }
 
 // launchMonitors starts a goroutine for each URL to monitor its status
-func launchMonitors(urls []string, stopChan <-chan struct{}, statusChan chan<- network.StatusUpdate) {
+func launchMonitors(urls []string, interval time.Duration, stopChan <-chan struct{}, statusChan chan<- network.StatusUpdate) {
 	for _, url := range urls {
-		go network.MonitorStatus(url, stopChan, statusChan)
+		go network.MonitorStatus(url, interval, stopChan, statusChan)
 	}
 }
 
