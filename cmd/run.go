@@ -12,7 +12,6 @@ type URLStatus struct {
 	IsUp bool
 }
 
-// Run function orchestrates the process of checking the status of all URLs in the list
 func Run() {
 	urlList, err := loadURLs()
 	if err != nil {
@@ -25,7 +24,6 @@ func Run() {
 	printResults(results)
 }
 
-// checkURLs concurrently checks the status of all provided URLs and returns a channel of results
 func checkURLs(urls []string) <-chan URLStatus {
 	results := make(chan URLStatus, len(urls))
 	var wg sync.WaitGroup

@@ -12,7 +12,8 @@ type URLList struct {
 
 const FileName = ".gosos-urls.json"
 
-// LoadURLs reads the list of URLs from a file and returns it as a URLList struct
+// LoadURLs reads a URLList from the user's home directory. A missing file
+// yields an empty list with a nil error; other errors return a nil list.
 func LoadURLs(filename string) (*URLList, error) {
 	filePath, err := getFilePath(filename)
 	if err != nil {
@@ -31,7 +32,6 @@ func LoadURLs(filename string) (*URLList, error) {
 	return &urls, err
 }
 
-// SaveURLs writes the provided URLList struct to a file in JSON format
 func SaveURLs(urls *URLList, filename string) error {
 	data, err := json.MarshalIndent(urls, "", "  ")
 	if err != nil {
@@ -46,7 +46,6 @@ func SaveURLs(urls *URLList, filename string) error {
 	return os.WriteFile(filePath, data, 0600)
 }
 
-// getFilePath returns the full path to the file where URLs are stored
 func getFilePath(filename string) (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

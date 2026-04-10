@@ -1,8 +1,7 @@
 package utils
 
 // RemoveElement returns a new slice with the first occurrence of element
-// removed. The input slice is not modified — callers that still hold a
-// reference to it will see it unchanged.
+// removed. The input slice is not modified.
 func RemoveElement[T comparable](slice []T, element T) []T {
 	for i, v := range slice {
 		if v == element {

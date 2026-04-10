@@ -4,7 +4,6 @@ import (
 	"git.thrls.net/thiagorls/gosos/output"
 )
 
-// List function displays all URLs stored in gosos
 func List() {
 	urlList, err := loadURLs()
 	if err != nil {

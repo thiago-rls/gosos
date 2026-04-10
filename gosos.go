@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-	// Check if any command-line arguments were provided
 	if len(os.Args) < 2 {
 		printHelp()
 		return
@@ -20,8 +19,6 @@ func main() {
 	command := os.Args[1]
 	args := os.Args[2:]
 
-	// Map commands to their respective handler functions
-	// This makes it easy to add new commands
 	commandFuncs := map[string]func([]string){
 		"add":    cmd.Add,
 		"remove": cmd.Remove,
@@ -31,8 +28,6 @@ func main() {
 		"help":   func([]string) { printHelp() },
 	}
 
-	// Check if the command exists in our map and execute it
-	// If not, print an error and the help text
 	if fn, ok := commandFuncs[command]; ok {
 		fn(args)
 	} else {
@@ -41,10 +36,8 @@ func main() {
 	}
 }
 
-// handleLive processes the "live" command
-// It parses the interval argument if provided, otherwise uses a default value
 func handleLive(args []string) {
-	interval := 30 // default
+	interval := 30
 
 	if len(args) > 0 {
 		var err error

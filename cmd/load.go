@@ -4,12 +4,8 @@ import (
 	"git.thrls.net/thiagorls/gosos/storage"
 )
 
-// loadURLs retrieves the list of URLs from storage.
-//
-// Callers are responsible for reporting any error to the user, and must
-// treat the returned *URLList as nil when err != nil — storage.LoadURLs
-// may return a nil list on read or path errors. On a missing config file
-// it returns an empty list with a nil error.
+// loadURLs wraps storage.LoadURLs. Callers must treat the returned list
+// as nil when err != nil and are responsible for reporting the error.
 func loadURLs() (*storage.URLList, error) {
 	return storage.LoadURLs(storage.FileName)
 }

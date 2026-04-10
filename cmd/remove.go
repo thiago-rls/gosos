@@ -12,9 +12,6 @@ import (
 	"git.thrls.net/thiagorls/gosos/utils"
 )
 
-// Remove function handles the removal of a URL from the list.
-// The target may be specified either as the full URL or as its index in
-// `gosos list` output.
 func Remove(args []string) {
 	target, err := parseRemoveArgs(args)
 	if err != nil {
@@ -47,7 +44,6 @@ func Remove(args []string) {
 	output.PrintSuccess("URL removed from list successfully: " + url)
 }
 
-// parseRemoveArgs parses and validates the command-line arguments for the remove command
 func parseRemoveArgs(args []string) (string, error) {
 	rmCmd := flag.NewFlagSet("remove", flag.ExitOnError)
 	if err := rmCmd.Parse(args); err != nil {
@@ -61,10 +57,9 @@ func parseRemoveArgs(args []string) (string, error) {
 	return rmCmd.Arg(0), nil
 }
 
-// resolveTarget turns a user-supplied remove target into a concrete URL.
-// A target that parses cleanly as a non-negative integer is treated as an
-// index into urls (matching the numbering shown by `gosos list`); anything
-// else is used as a literal URL.
+// resolveTarget treats target as a list index if it parses as an integer,
+// otherwise as a literal URL. The index form matches the numbering shown
+// by `gosos list`.
 func resolveTarget(target string, urls []string) (string, error) {
 	if idx, err := strconv.Atoi(target); err == nil {
 		if idx < 0 || idx >= len(urls) {
@@ -75,7 +70,6 @@ func resolveTarget(target string, urls []string) (string, error) {
 	return target, nil
 }
 
-// removeURLFromList removes the specified URL from the URLList
 func removeURLFromList(urlList *storage.URLList, url string) error {
 	if !slices.Contains(urlList.URLs, url) {
 		return fmt.Errorf("URL does not exist in the list")

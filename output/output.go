@@ -8,31 +8,26 @@ import (
 	"github.com/pterm/pterm"
 )
 
-// PrintError prints an error message in a box
 func PrintError(message string) {
 	box := pterm.DefaultBox.WithTitle("ERROR").WithTitleBottomRight().Sprint(message)
 	pterm.Println(pterm.Red(box))
 }
 
-// PrintWarning prints a warning message in a box
 func PrintWarning(message string) {
 	box := pterm.DefaultBox.WithTitle("WARNING").WithTitleBottomRight().Sprint(message)
 	pterm.Println(pterm.Yellow(box))
 }
 
-// PrintSuccess prints a success message in a box
 func PrintSuccess(message string) {
 	box := pterm.DefaultBox.WithTitle("SUCCESS").WithTitleBottomRight().Sprint(message)
 	pterm.Println(pterm.Green(box))
 }
 
-// PrintInfo prints an info message in a box
 func PrintInfo(message string) {
 	box := pterm.DefaultBox.WithTitle("INFO").WithTitleBottomRight().Sprint(message)
 	pterm.Println(pterm.Cyan(box))
 }
 
-// PrintURLStatus prints the status of a URL in a box
 func PrintURLStatus(url string, isUp bool) {
 	status := pterm.Green("UP")
 	if !isUp {
@@ -43,7 +38,6 @@ func PrintURLStatus(url string, isUp bool) {
 	pterm.Println(box)
 }
 
-// PrintURLList prints a table of URLs in a box
 func PrintURLList(urls []string) {
 	table := pterm.TableData{
 		{"Index", "URL"},
@@ -60,18 +54,15 @@ func PrintURLList(urls []string) {
 	pterm.Println(box)
 }
 
-// LiveList is a thread-safe, self-contained live display of URL statuses.
-// It replaces the previous package-level globals and the hand-rolled ANSI
-// clear-screen sequences with a pterm.AreaPrinter, which handles portable
-// in-place updates across terminals.
+// LiveList is a thread-safe live display of URL statuses backed by a
+// pterm.AreaPrinter for portable in-place updates.
 type LiveList struct {
 	mu       sync.Mutex
 	statuses []string
 	area     *pterm.AreaPrinter
 }
 
-// NewLiveList initializes a live display for the provided URLs and starts
-// rendering. Callers must call Stop when monitoring is done.
+// NewLiveList starts a live display for urls. Callers must call Stop.
 func NewLiveList(urls []string) (*LiveList, error) {
 	area, err := pterm.DefaultArea.Start()
 	if err != nil {
@@ -89,7 +80,6 @@ func NewLiveList(urls []string) (*LiveList, error) {
 	return l, nil
 }
 
-// Update sets the status of the URL at the given index and re-renders.
 func (l *LiveList) Update(index int, url string, isUp bool) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -106,7 +96,6 @@ func (l *LiveList) Update(index int, url string, isUp bool) {
 	l.render()
 }
 
-// Stop finalizes the live display.
 func (l *LiveList) Stop() {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -116,8 +105,7 @@ func (l *LiveList) Stop() {
 	}
 }
 
-// render rebuilds the box contents and pushes them to the area. Callers
-// must hold l.mu.
+// render rebuilds and pushes the box contents. Callers must hold l.mu.
 func (l *LiveList) render() {
 	if l.area == nil {
 		return

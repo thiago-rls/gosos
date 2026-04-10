@@ -12,7 +12,6 @@ import (
 	"git.thrls.net/thiagorls/gosos/output"
 )
 
-// Live function manages the real-time monitoring of URLs
 func Live(interval int) {
 	urlList, err := loadURLs()
 	if err != nil {
@@ -40,20 +39,19 @@ func Live(interval int) {
 
 	exitMessage := monitorLoop(urlIndexMap, liveList, statusChan, inputChan, sigChan, stopChan)
 
-	// Wait for all monitor goroutines to observe the stop signal and exit
-	// before returning. We intentionally do not close statusChan — there is
-	// no remaining reader, and closing it while goroutines might still send
-	// would race.
+	// Wait for monitors to drain before returning. statusChan is intentionally
+	// never closed: no one reads it after monitorLoop returns, and closing it
+	// while goroutines might still send would race.
 	wg.Wait()
 
-	// Tear down the live display before printing the exit message so the
-	// warning box isn't overwritten by a final area update.
+	// Tear down the live area before printing so the warning isn't overwritten
+	// by a final redraw.
 	liveList.Stop()
 	output.PrintWarning(exitMessage)
 }
 
-// launchMonitors starts a goroutine for each URL to monitor its status.
-// Returns a WaitGroup that completes when every monitor has exited.
+// launchMonitors spawns one monitor goroutine per URL. The returned WaitGroup
+// completes when every monitor has exited.
 func launchMonitors(urls []string, interval time.Duration, stopChan <-chan struct{}, statusChan chan<- network.StatusUpdate) *sync.WaitGroup {
 	var wg sync.WaitGroup
 	for _, url := range urls {
@@ -66,7 +64,6 @@ func launchMonitors(urls []string, interval time.Duration, stopChan <-chan struc
 	return &wg
 }
 
-// listenForUserInput creates a channel that closes when user input is detected
 func listenForUserInput() <-chan struct{} {
 	inputChan := make(chan struct{})
 	go func() {
@@ -76,15 +73,12 @@ func listenForUserInput() <-chan struct{} {
 	return inputChan
 }
 
-// listenForInterrupt returns a channel that receives on SIGINT or SIGTERM so
-// users can stop live monitoring with Ctrl-C in addition to pressing Enter.
 func listenForInterrupt() chan os.Signal {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	return sigChan
 }
 
-// createURLIndexMap builds a map of URLs to their indices for quick lookups
 func createURLIndexMap(urls []string) map[string]int {
 	urlIndexMap := make(map[string]int, len(urls))
 	for i, url := range urls {
@@ -93,8 +87,8 @@ func createURLIndexMap(urls []string) map[string]int {
 	return urlIndexMap
 }
 
-// monitorLoop handles incoming status updates and watches for stop signals
-// (user input or interrupt). Returns the message to show after shutdown.
+// monitorLoop forwards status updates to the live display until inputChan
+// or sigChan fires, then closes stopChan and returns the exit message.
 func monitorLoop(
 	urlIndexMap map[string]int,
 	liveList *output.LiveList,
