@@ -90,8 +90,9 @@ func TestCheckAndSend(t *testing.T) {
 
 	url := server.URL
 	status := make(chan StatusUpdate, 1)
+	stop := make(chan struct{})
 
-	checkAndSend(url, status)
+	checkAndSend(url, status, stop)
 
 	select {
 	case update := <-status:

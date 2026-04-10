@@ -5,12 +5,12 @@ import (
 	"git.thrls.net/thiagorls/gosos/network"
 	"git.thrls.net/thiagorls/gosos/output"
 	"os"
+	"sync"
 	"time"
 )
 
 const (
 	updateInterval = 100 * time.Millisecond
-	shutdownDelay  = time.Second
 )
 
 // Live function manages the real-time monitoring of URLs
@@ -28,7 +28,7 @@ func Live(interval int) {
 	stopChan := make(chan struct{})
 	statusChan := make(chan network.StatusUpdate, len(urlList.URLs))
 
-	launchMonitors(urlList.URLs, time.Duration(interval)*time.Second, stopChan, statusChan)
+	wg := launchMonitors(urlList.URLs, time.Duration(interval)*time.Second, stopChan, statusChan)
 
 	// Listen for user input to stop the monitoring
 	inputChan := listenForUserInput()
@@ -39,7 +39,11 @@ func Live(interval int) {
 	// Start the main monitoring loop
 	monitorLoop(urlIndexMap, statusChan, inputChan, stopChan)
 
-	shutdown(statusChan)
+	// Wait for all monitor goroutines to observe the stop signal and exit
+	// before returning. We intentionally do not close statusChan — there is
+	// no remaining reader, and closing it while goroutines might still send
+	// would race.
+	wg.Wait()
 }
 
 // initializeLiveDisplay sets up the live display for URL statuses
@@ -51,11 +55,18 @@ func initializeLiveDisplay(urls []string) error {
 	return nil
 }
 
-// launchMonitors starts a goroutine for each URL to monitor its status
-func launchMonitors(urls []string, interval time.Duration, stopChan <-chan struct{}, statusChan chan<- network.StatusUpdate) {
+// launchMonitors starts a goroutine for each URL to monitor its status.
+// Returns a WaitGroup that completes when every monitor has exited.
+func launchMonitors(urls []string, interval time.Duration, stopChan <-chan struct{}, statusChan chan<- network.StatusUpdate) *sync.WaitGroup {
+	var wg sync.WaitGroup
 	for _, url := range urls {
-		go network.MonitorStatus(url, interval, stopChan, statusChan)
+		wg.Add(1)
+		go func(u string) {
+			defer wg.Done()
+			network.MonitorStatus(u, interval, stopChan, statusChan)
+		}(url)
 	}
+	return &wg
 }
 
 // listenForUserInput creates a channel that closes when user input is detected
@@ -98,9 +109,3 @@ func monitorLoop(urlIndexMap map[string]int, statusChan <-chan network.StatusUpd
 	}
 }
 
-// shutdown performs cleanup operations before exiting the program
-func shutdown(statusChan chan network.StatusUpdate) {
-	// Allow some time for final status updates to be processed
-	time.Sleep(shutdownDelay)
-	close(statusChan)
-}

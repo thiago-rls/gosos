@@ -30,19 +30,25 @@ func MonitorStatus(url string, interval time.Duration, stop <-chan struct{}, sta
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	checkAndSend(url, status)
+	checkAndSend(url, status, stop)
 
 	for {
 		select {
 		case <-stop:
 			return
 		case <-ticker.C:
-			checkAndSend(url, status)
+			checkAndSend(url, status, stop)
 		}
 	}
 }
 
-// checkAndSend checks the status of a URL and sends an update through the status channel
-func checkAndSend(url string, status chan<- StatusUpdate) {
-	status <- StatusUpdate{URL: url, IsUp: IsUp(url)}
+// checkAndSend checks the status of a URL and sends an update through the status channel.
+// If stop is closed while waiting to send, it returns without sending so callers can
+// shut down cleanly even when the receiver has stopped reading.
+func checkAndSend(url string, status chan<- StatusUpdate, stop <-chan struct{}) {
+	update := StatusUpdate{URL: url, IsUp: IsUp(url)}
+	select {
+	case status <- update:
+	case <-stop:
+	}
 }
