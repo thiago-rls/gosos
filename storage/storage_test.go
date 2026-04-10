@@ -2,7 +2,6 @@ package storage
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,15 +9,13 @@ import (
 
 const testFileName = ".gosos-urls-test.json"
 
+// setupTest redirects the user's home directory to a per-test temp dir so
+// that storage tests cannot read from or write to the real $HOME.
 func setupTest(t *testing.T) {
-	filePath, err := getFilePath(testFileName)
-	if err != nil {
-		t.Fatalf("Failed to get test file path: %v", err)
-	}
-	err = os.Remove(filePath)
-	if err != nil && !os.IsNotExist(err) {
-		t.Fatalf("Failed to remove test file: %v", err)
-	}
+	t.Helper()
+	tmp := t.TempDir()
+	t.Setenv("HOME", tmp)
+	t.Setenv("USERPROFILE", tmp) // Windows
 }
 
 func TestSaveURLs(t *testing.T) {
@@ -77,13 +74,14 @@ func TestLoadURLs(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	fmt.Println(urls.URLs)
 	if len(urls.URLs) != 2 || urls.URLs[0] != "http://example.com" || urls.URLs[1] != "http://test.com" {
 		t.Fatalf("Expected %v, got %v", expectedURLs.URLs, urls.URLs)
 	}
 }
 
 func TestFilePath(t *testing.T) {
+	setupTest(t)
+
 	homeDir, _ := os.UserHomeDir()
 	expectedPath := filepath.Join(homeDir, testFileName)
 
