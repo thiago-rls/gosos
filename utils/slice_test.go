@@ -59,3 +59,14 @@ func TestRemoveElement(t *testing.T) {
 		})
 	}
 }
+
+func TestRemoveElementDoesNotMutateInput(t *testing.T) {
+	input := []int{1, 2, 3, 4, 5}
+	original := slices.Clone(input)
+
+	_ = RemoveElement(input, 3)
+
+	if !slices.Equal(input, original) {
+		t.Fatalf("RemoveElement mutated input: before=%v after=%v", original, input)
+	}
+}

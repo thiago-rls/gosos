@@ -1,10 +1,15 @@
 package utils
 
-// RemoveElement removes the first occurrence of a specified element from a slice
+// RemoveElement returns a new slice with the first occurrence of element
+// removed. The input slice is not modified — callers that still hold a
+// reference to it will see it unchanged.
 func RemoveElement[T comparable](slice []T, element T) []T {
 	for i, v := range slice {
 		if v == element {
-			return append(slice[:i], slice[i+1:]...)
+			result := make([]T, 0, len(slice)-1)
+			result = append(result, slice[:i]...)
+			result = append(result, slice[i+1:]...)
+			return result
 		}
 	}
 	return slice
