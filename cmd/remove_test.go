@@ -34,6 +34,47 @@ func TestParseRemoveArgs(t *testing.T) {
 	}
 }
 
+func TestResolveTarget(t *testing.T) {
+	urls := []string{
+		"http://example.com",
+		"http://test.com",
+		"https://third.com",
+	}
+
+	tests := []struct {
+		name    string
+		target  string
+		want    string
+		wantErr bool
+	}{
+		{"Literal URL passes through", "http://example.com", "http://example.com", false},
+		{"Unknown URL passes through", "http://not-in-list.com", "http://not-in-list.com", false},
+		{"Index 0", "0", "http://example.com", false},
+		{"Index 1", "1", "http://test.com", false},
+		{"Last index", "2", "https://third.com", false},
+		{"Index out of range", "3", "", true},
+		{"Negative index", "-1", "", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := resolveTarget(tt.target, urls)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("resolveTarget() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if got != tt.want {
+				t.Errorf("resolveTarget() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestResolveTargetEmptyList(t *testing.T) {
+	if _, err := resolveTarget("0", nil); err == nil {
+		t.Errorf("expected error when resolving index on empty list, got nil")
+	}
+}
+
 func TestRemoveURLFromList(t *testing.T) {
 	tests := []struct {
 		name    string

@@ -3,6 +3,7 @@ package cmd
 import (
 	"flag"
 	"fmt"
+	"strconv"
 
 	"golang.org/x/exp/slices"
 
@@ -11,9 +12,11 @@ import (
 	"git.thrls.net/thiagorls/gosos/utils"
 )
 
-// Remove function handles the removal of a URL from the list
+// Remove function handles the removal of a URL from the list.
+// The target may be specified either as the full URL or as its index in
+// `gosos list` output.
 func Remove(args []string) {
-	url, err := parseRemoveArgs(args)
+	target, err := parseRemoveArgs(args)
 	if err != nil {
 		output.PrintError(err.Error())
 		return
@@ -22,6 +25,12 @@ func Remove(args []string) {
 	urlList, err := loadURLs()
 	if err != nil {
 		output.PrintError("Error loading URLs: " + err.Error())
+		return
+	}
+
+	url, err := resolveTarget(target, urlList.URLs)
+	if err != nil {
+		output.PrintError(err.Error())
 		return
 	}
 
@@ -35,7 +44,7 @@ func Remove(args []string) {
 		return
 	}
 
-	output.PrintSuccess("URL removed from list successfully")
+	output.PrintSuccess("URL removed from list successfully: " + url)
 }
 
 // parseRemoveArgs parses and validates the command-line arguments for the remove command
@@ -46,10 +55,24 @@ func parseRemoveArgs(args []string) (string, error) {
 	}
 
 	if rmCmd.NArg() < 1 {
-		return "", fmt.Errorf("insufficient arguments\nUsage: gosos remove <url>")
+		return "", fmt.Errorf("insufficient arguments\nUsage: gosos remove <url|index>")
 	}
 
 	return rmCmd.Arg(0), nil
+}
+
+// resolveTarget turns a user-supplied remove target into a concrete URL.
+// A target that parses cleanly as a non-negative integer is treated as an
+// index into urls (matching the numbering shown by `gosos list`); anything
+// else is used as a literal URL.
+func resolveTarget(target string, urls []string) (string, error) {
+	if idx, err := strconv.Atoi(target); err == nil {
+		if idx < 0 || idx >= len(urls) {
+			return "", fmt.Errorf("index %d out of range (list has %d entries)", idx, len(urls))
+		}
+		return urls[idx], nil
+	}
+	return target, nil
 }
 
 // removeURLFromList removes the specified URL from the URLList
