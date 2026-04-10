@@ -8,12 +8,6 @@ import (
 	"github.com/pterm/pterm"
 )
 
-var (
-	liveStatusList []string
-	statusMutex    sync.Mutex
-	spinner        *pterm.SpinnerPrinter
-)
-
 // PrintError prints an error message in a box
 func PrintError(message string) {
 	box := pterm.DefaultBox.WithTitle("ERROR").WithTitleBottomRight().Sprint(message)
@@ -66,72 +60,78 @@ func PrintURLList(urls []string) {
 	pterm.Println(box)
 }
 
-func InitLiveList(urls []string) error {
-	liveStatusList = make([]string, len(urls))
-	for i, url := range urls {
-		liveStatusList[i] = fmt.Sprintf("%s - Checking...", url)
-	}
-
-	var err error
-	spinner, err = pterm.DefaultSpinner.
-		WithRemoveWhenDone(false).
-		WithText("Monitoring...").
-		Start()
-
-	if err != nil {
-		return err
-	}
-
-	renderLiveList()
-	return nil
+// LiveList is a thread-safe, self-contained live display of URL statuses.
+// It replaces the previous package-level globals and the hand-rolled ANSI
+// clear-screen sequences with a pterm.AreaPrinter, which handles portable
+// in-place updates across terminals.
+type LiveList struct {
+	mu       sync.Mutex
+	statuses []string
+	area     *pterm.AreaPrinter
 }
 
-// UpdateURLStatus updates the status of a URL in the live list
-func UpdateURLStatus(index int, url string, isUp bool) {
-	statusMutex.Lock()
-	defer statusMutex.Unlock()
+// NewLiveList initializes a live display for the provided URLs and starts
+// rendering. Callers must call Stop when monitoring is done.
+func NewLiveList(urls []string) (*LiveList, error) {
+	area, err := pterm.DefaultArea.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	l := &LiveList{
+		statuses: make([]string, len(urls)),
+		area:     area,
+	}
+	for i, url := range urls {
+		l.statuses[i] = fmt.Sprintf("%s - Checking...", url)
+	}
+	l.render()
+	return l, nil
+}
+
+// Update sets the status of the URL at the given index and re-renders.
+func (l *LiveList) Update(index int, url string, isUp bool) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if index < 0 || index >= len(l.statuses) {
+		return
+	}
 
 	status := pterm.Green("UP")
 	if !isUp {
 		status = pterm.Red("DOWN")
 	}
-	liveStatusList[index] = fmt.Sprintf("%s - %s", url, status)
-	renderLiveList()
+	l.statuses[index] = fmt.Sprintf("%s - %s", url, status)
+	l.render()
 }
 
-// renderLiveList clears the console and re-renders the entire list in a box
-func renderLiveList() {
-	// Clear the console
-	pterm.Print("\033[2J")
-	pterm.Print("\033[H")
-
-	// Create content for the box
-	content := pterm.Blue("Live Status:") + "\n"
-	content += strings.Repeat("-", 40) + "\n"
-
-	// Add each status to the content
-	for _, status := range liveStatusList {
-		content += status + "\n"
-	}
-
-	content += strings.Repeat("-", 40) + "\n"
-	content += pterm.Gray("Press Enter to stop monitoring")
-
-	// Create the box with the content
-	box := pterm.DefaultBox.WithTitle("URL Monitoring").WithTitleBottomCenter().Sprint(content)
-
-	// Print the box
-	fmt.Println(box)
-
-	// Update spinner text (this keeps the spinner running)
-	if spinner != nil {
-		spinner.UpdateText("Monitoring...")
+// Stop finalizes the live display.
+func (l *LiveList) Stop() {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.area != nil {
+		_ = l.area.Stop()
+		l.area = nil
 	}
 }
 
-// StopLiveList stops the spinner
-func StopLiveList() {
-	if spinner != nil {
-		_ = spinner.Stop()
+// render rebuilds the box contents and pushes them to the area. Callers
+// must hold l.mu.
+func (l *LiveList) render() {
+	if l.area == nil {
+		return
 	}
+
+	var content strings.Builder
+	content.WriteString(pterm.Blue("Live Status:") + "\n")
+	content.WriteString(strings.Repeat("-", 40) + "\n")
+	for _, status := range l.statuses {
+		content.WriteString(status + "\n")
+	}
+	content.WriteString(strings.Repeat("-", 40) + "\n")
+	content.WriteString(pterm.Gray("Press Enter or Ctrl-C to stop monitoring"))
+
+	box := pterm.DefaultBox.WithTitle("URL Monitoring").WithTitleBottomCenter().Sprint(content.String())
+	l.area.Update(box)
 }

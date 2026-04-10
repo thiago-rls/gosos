@@ -3,7 +3,9 @@ package cmd
 import (
 	"bufio"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"git.thrls.net/thiagorls/gosos/network"
@@ -18,39 +20,36 @@ func Live(interval int) {
 		return
 	}
 
-	if err := initializeLiveDisplay(urlList.URLs); err != nil {
+	liveList, err := output.NewLiveList(urlList.URLs)
+	if err != nil {
+		output.PrintError("Error initializing live display: " + err.Error())
 		return
 	}
-	defer output.StopLiveList()
+	defer liveList.Stop()
 
 	stopChan := make(chan struct{})
 	statusChan := make(chan network.StatusUpdate, len(urlList.URLs))
 
 	wg := launchMonitors(urlList.URLs, time.Duration(interval)*time.Second, stopChan, statusChan)
 
-	// Listen for user input to stop the monitoring
 	inputChan := listenForUserInput()
+	sigChan := listenForInterrupt()
+	defer signal.Stop(sigChan)
 
-	// Create a map for efficient lookup of URL indices
 	urlIndexMap := createURLIndexMap(urlList.URLs)
 
-	// Start the main monitoring loop
-	monitorLoop(urlIndexMap, statusChan, inputChan, stopChan)
+	exitMessage := monitorLoop(urlIndexMap, liveList, statusChan, inputChan, sigChan, stopChan)
 
 	// Wait for all monitor goroutines to observe the stop signal and exit
 	// before returning. We intentionally do not close statusChan — there is
 	// no remaining reader, and closing it while goroutines might still send
 	// would race.
 	wg.Wait()
-}
 
-// initializeLiveDisplay sets up the live display for URL statuses
-func initializeLiveDisplay(urls []string) error {
-	if err := output.InitLiveList(urls); err != nil {
-		output.PrintError("Error initializing live display: " + err.Error())
-		return err
-	}
-	return nil
+	// Tear down the live display before printing the exit message so the
+	// warning box isn't overwritten by a final area update.
+	liveList.Stop()
+	output.PrintWarning(exitMessage)
 }
 
 // launchMonitors starts a goroutine for each URL to monitor its status.
@@ -77,6 +76,14 @@ func listenForUserInput() <-chan struct{} {
 	return inputChan
 }
 
+// listenForInterrupt returns a channel that receives on SIGINT or SIGTERM so
+// users can stop live monitoring with Ctrl-C in addition to pressing Enter.
+func listenForInterrupt() chan os.Signal {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	return sigChan
+}
+
 // createURLIndexMap builds a map of URLs to their indices for quick lookups
 func createURLIndexMap(urls []string) map[string]int {
 	urlIndexMap := make(map[string]int, len(urls))
@@ -86,21 +93,28 @@ func createURLIndexMap(urls []string) map[string]int {
 	return urlIndexMap
 }
 
-// monitorLoop handles incoming status updates and checks for user input to stop monitoring
-func monitorLoop(urlIndexMap map[string]int, statusChan <-chan network.StatusUpdate, inputChan <-chan struct{}, stopChan chan<- struct{}) {
+// monitorLoop handles incoming status updates and watches for stop signals
+// (user input or interrupt). Returns the message to show after shutdown.
+func monitorLoop(
+	urlIndexMap map[string]int,
+	liveList *output.LiveList,
+	statusChan <-chan network.StatusUpdate,
+	inputChan <-chan struct{},
+	sigChan <-chan os.Signal,
+	stopChan chan<- struct{},
+) string {
 	for {
 		select {
 		case status := <-statusChan:
-			// Update the status of a URL when a status update is received
 			if index, exists := urlIndexMap[status.URL]; exists {
-				output.UpdateURLStatus(index, status.URL, status.IsUp)
+				liveList.Update(index, status.URL, status.IsUp)
 			}
 		case <-inputChan:
-			// Stop monitoring when user input is detected
 			close(stopChan)
-			output.PrintWarning("Monitoring stopped. Closing all connections.")
-			return
+			return "Monitoring stopped. Closing all connections."
+		case <-sigChan:
+			close(stopChan)
+			return "Interrupted. Closing all connections."
 		}
 	}
 }
-
