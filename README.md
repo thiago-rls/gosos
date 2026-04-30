@@ -4,6 +4,8 @@ Gosos is a simple CLI tool for monitoring website and API statuses.
 
 I needed something I could use to check the multiple self-hosted services I use.
 
+![Gosos Live](SCR-20260429-sljg.png)
+
 ## Features
 
 - Add and remove URLs for monitoring
